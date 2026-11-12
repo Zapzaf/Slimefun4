@@ -1,5 +1,7 @@
 package io.github.thebusybiscuit.slimefun4.core.commands.subcommands;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +59,20 @@ class GiveCommand extends SubCommand {
         }
     }
 
+    /**
+     * Splits the given amount of an item into stacks no larger than the item's max stack size.
+     */
+    static List<ItemStack> splitIntoStacks(ItemStack item, int amount) {
+        int maxStackSize = Math.max(1, item.getMaxStackSize());
+        List<ItemStack> stacks = new ArrayList<>();
+
+        for (int remaining = amount; remaining > 0; remaining -= maxStackSize) {
+            stacks.add(CustomItemStack.create(item, Math.min(remaining, maxStackSize)));
+        }
+
+        return stacks;
+    }
+
     private void giveItem(CommandSender sender, Player p, SlimefunItem sfItem, String[] args) {
         if (sfItem instanceof MultiBlockMachine) {
             Slimefun.getLocalization().sendMessage(sender, "guide.cheat.no-multiblocks");
@@ -65,10 +81,16 @@ class GiveCommand extends SubCommand {
 
             if (amount > 0) {
                 Slimefun.getLocalization().sendMessage(p, "messages.given-item", true, msg -> msg.replace(PLACEHOLDER_ITEM, sfItem.getItemName()).replace(PLACEHOLDER_AMOUNT, String.valueOf(amount)));
-                Map<Integer, ItemStack> excess = p.getInventory().addItem(CustomItemStack.create(sfItem.getItem(), amount));
-                if (Slimefun.getCfg().getBoolean("options.drop-excess-sf-give-items") && !excess.isEmpty()) {
-                    for (ItemStack is : excess.values()) {
-                        p.getWorld().dropItem(p.getLocation(), is);
+                boolean dropExcess = Slimefun.getCfg().getBoolean("options.drop-excess-sf-give-items");
+
+                // Fixes #4272 - Split into stacks of the item's max stack size, the inventory would use 99 otherwise
+                for (ItemStack stack : splitIntoStacks(sfItem.getItem(), amount)) {
+                    Map<Integer, ItemStack> excess = p.getInventory().addItem(stack);
+
+                    if (dropExcess) {
+                        for (ItemStack is : excess.values()) {
+                            p.getWorld().dropItem(p.getLocation(), is);
+                        }
                     }
                 }
 

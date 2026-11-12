@@ -30,6 +30,8 @@
 
         <!-- Spigot properties -->
         <paper.version>1.21.1</paper.version>
+        <!-- Override with -Dpaper.api.version=26.3.build.249-stable to compile against 26.x -->
+        <paper.api.version>${paper.version}-R0.1-SNAPSHOT</paper.api.version>
         <paper.javadocs>https://hub.spigotmc.org/javadocs/spigot/</paper.javadocs>
 
         <!-- Default settings for sonarcloud.io -->
@@ -168,7 +170,7 @@
                 <!-- Code Coverage Reports -->
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
+                <version>0.8.14</version>
 
                 <executions>
                     <execution>
@@ -378,7 +380,7 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>${paper.version}-R0.1-SNAPSHOT</version>
+            <version>${paper.api.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -391,7 +393,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.15.2</version>
+            <version>5.24.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -537,4 +539,20 @@
             </exclusions>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <!-- Builds Slimefun against the Minecraft 26.3 Paper API (requires Java 25). -->
+            <!-- Usage: mvn clean package -P minecraft-26 -->
+            <!-- Unit tests are skipped: they run on MockBukkit for 1.21 in the default build. -->
+            <id>minecraft-26</id>
+
+            <properties>
+                <paper.version>26.3</paper.version>
+                <paper.api.version>26.3.build.249-stable</paper.api.version>
+                <paper.javadocs>https://jd.papermc.io/paper/26.3/</paper.javadocs>
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
+        </profile>
+    </profiles>
 </project>

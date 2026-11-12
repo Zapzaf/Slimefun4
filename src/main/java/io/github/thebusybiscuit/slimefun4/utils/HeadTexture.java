@@ -163,6 +163,16 @@ public enum HeadTexture {
         return SlimefunUtils.getCustomHead(getTexture());
     }
 
+    /**
+     * This returns this texture as a dough {@link PlayerSkin}.
+     *
+     * @deprecated dough's {@link PlayerSkin} cannot be loaded on Minecraft 26.x.
+     *             Use {@link #getTexture()} with
+     *             {@link io.github.thebusybiscuit.slimefun4.utils.compatibility.VersionedPlayerHead} instead.
+     *
+     * @return A {@link PlayerSkin} for this texture
+     */
+    @Deprecated
     public @Nonnull PlayerSkin getAsSkin() {
         return PlayerSkin.fromHashCode(texture);
     }

@@ -5,8 +5,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.commons.lang.Validate;
@@ -16,6 +18,7 @@ import org.bukkit.block.Block;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import io.github.bakedlibs.dough.blocks.BlockPosition;
 import io.github.bakedlibs.dough.inventory.InvUtils;
 import io.github.bakedlibs.dough.items.CustomItemStack;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
@@ -50,6 +53,12 @@ public abstract class AContainer extends SlimefunItem implements InventoryBlock,
     private static final int[] BORDER_OUT = { 14, 15, 16, 17, 23, 26, 32, 33, 34, 35 };
 
     protected final List<MachineRecipe> recipes = new ArrayList<>();
+
+    /**
+     * The items that were taken out of the input slots when the current operation of a machine started.
+     * They are dropped if the machine is broken before the operation finished (#4268).
+     */
+    private final Map<BlockPosition, List<ItemStack>> consumedInputs = new ConcurrentHashMap<>();
     private final MachineProcessor<CraftingOperation> processor = new MachineProcessor<>(this);
 
     private int energyConsumedPerTick = -1;
@@ -77,6 +86,15 @@ public abstract class AContainer extends SlimefunItem implements InventoryBlock,
                 if (inv != null) {
                     inv.dropItems(b.getLocation(), getInputSlots());
                     inv.dropItems(b.getLocation(), getOutputSlots());
+                }
+
+                // Fixes #4268 - Return the items of an unfinished operation instead of deleting them
+                List<ItemStack> consumed = consumedInputs.remove(new BlockPosition(b));
+
+                if (consumed != null && processor.getOperation(b) != null) {
+                    for (ItemStack item : consumed) {
+                        b.getWorld().dropItemNaturally(b.getLocation(), item);
+                    }
                 }
 
                 processor.endOperation(b);
@@ -279,7 +297,7 @@ public abstract class AContainer extends SlimefunItem implements InventoryBlock,
         List<ItemStack> displayRecipes = new ArrayList<>(recipes.size() * 2);
 
         for (MachineRecipe recipe : recipes) {
-            if (recipe.getInput().length != 1) {
+            if (recipe.getInput().length != 1 || hasDisabledOutput(recipe)) {
                 continue;
             }
 
@@ -368,12 +386,15 @@ public abstract class AContainer extends SlimefunItem implements InventoryBlock,
                     }
 
                     processor.endOperation(b);
+                    consumedInputs.remove(new BlockPosition(b));
                 }
             }
         } else {
+            ItemStack[] before = snapshotInputs(inv);
             MachineRecipe next = findNextRecipe(inv);
 
             if (next != null) {
+                consumedInputs.put(new BlockPosition(b), getConsumedItems(before, snapshotInputs(inv)));
                 currentOperation = new CraftingOperation(next);
                 processor.startOperation(b, currentOperation);
 
@@ -431,6 +452,12 @@ public abstract class AContainer extends SlimefunItem implements InventoryBlock,
             }
 
             if (found.size() == recipe.getInput().length) {
+                // Fixes #4333 - Do not craft Slimefun items that have been disabled
+                if (hasDisabledOutput(recipe)) {
+                    found.clear();
+                    continue;
+                }
+
                 if (!InvUtils.fitAll(inv.toInventory(), recipe.getOutput(), getOutputSlots())) {
                     return null;
                 }
@@ -446,5 +473,76 @@ public abstract class AContainer extends SlimefunItem implements InventoryBlock,
         }
 
         return null;
+    }
+
+    private @Nonnull ItemStack[] snapshotInputs(@Nonnull BlockMenu inv) {
+        int[] slots = getInputSlots();
+        ItemStack[] snapshot = new ItemStack[slots.length];
+
+        for (int i = 0; i < slots.length; i++) {
+            ItemStack item = inv.getItemInSlot(slots[i]);
+            snapshot[i] = item == null ? null : item.clone();
+        }
+
+        return snapshot;
+    }
+
+    /**
+     * This compares the input slots before and after an operation started
+     * and returns the items that were taken out of them.
+     *
+     * @param before
+     *            The contents of the input slots before the operation started
+     * @param after
+     *            The contents of the input slots after the operation started
+     *
+     * @return The items that were consumed
+     */
+    static @Nonnull List<ItemStack> getConsumedItems(@Nonnull ItemStack[] before, @Nonnull ItemStack[] after) {
+        List<ItemStack> consumed = new ArrayList<>();
+
+        for (int i = 0; i < before.length; i++) {
+            ItemStack previous = before[i];
+
+            if (isEmpty(previous)) {
+                continue;
+            }
+
+            ItemStack current = i < after.length ? after[i] : null;
+            int remaining = !isEmpty(current) && current.isSimilar(previous) ? current.getAmount() : 0;
+            int used = previous.getAmount() - remaining;
+
+            if (used > 0) {
+                ItemStack item = previous.clone();
+                item.setAmount(used);
+                consumed.add(item);
+            }
+        }
+
+        return consumed;
+    }
+
+    private static boolean isEmpty(@Nullable ItemStack item) {
+        return item == null || item.getType().isAir() || item.getAmount() <= 0;
+    }
+
+    /**
+     * This checks whether any output of the given {@link MachineRecipe} is a disabled {@link SlimefunItem}.
+     *
+     * @param recipe
+     *            The {@link MachineRecipe} to check
+     *
+     * @return Whether this recipe would produce a disabled {@link SlimefunItem}
+     */
+    protected static boolean hasDisabledOutput(@Nonnull MachineRecipe recipe) {
+        for (ItemStack output : recipe.getOutput()) {
+            SlimefunItem sfItem = SlimefunItem.getByItem(output);
+
+            if (sfItem != null && sfItem.isDisabled()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

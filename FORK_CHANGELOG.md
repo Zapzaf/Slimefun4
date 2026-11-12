@@ -1,0 +1,103 @@
+# Fork Changelog
+
+This file lists everything this fork changes compared to the upstream
+[Slimefun4](https://github.com/Slimefun/Slimefun4) `experimental` branch (base commit `5374034c8`).
+The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork leaves untouched.
+
+- [Unreleased (12 Nov 2026)](#unreleased-12-nov-2026)
+  - [Minecraft 26.3 support](#minecraft-263-support)
+  - [Bug fixes from the upstream issue tracker](#bug-fixes-from-the-upstream-issue-tracker)
+  - [Build and test changes](#build-and-test-changes)
+  - [Known issues](#known-issues)
+  - [Which jar to use](#which-jar-to-use)
+
+## Unreleased (12 Nov 2026)
+
+### Minecraft 26.3 support
+
+Minecraft switched to year-based version numbers (`26.1`, `26.2`, `26.3`), and Paper 26.x needs Java 25.
+Slimefun now runs on Paper 26.3. On 1.16–1.21 servers it behaves exactly as before: every 26.x change
+only takes effect when the server runs 26.3 or newer.
+
+#### Additions
+* Added `MinecraftVersion.MINECRAFT_26_3`
+* Slimefun now reads year-based versions such as `(MC: 26.3)` and `26.3.build.249-stable`
+  (`MinecraftVersion#parseVersion` and `MinecraftVersion#of`)
+* Added the 26.3 biome list (`dappled_forest`, `pale_garden`, `sulfur_caves` are new)
+* Added `VersionedAttribute.MAX_HEALTH`, which works with both `MAX_HEALTH` (26.x) and `GENERIC_MAX_HEALTH` (1.21)
+* Added `VersionedPlayerHead`, which creates custom heads through the Bukkit `PlayerProfile` API on 26.3+
+
+#### Changes
+* Slimefun no longer uses PaperLib to detect the Minecraft version. PaperLib reads 26.x as "version 0",
+  which made Slimefun run in its oldest compatibility mode
+* The "wrong version of Minecraft" warning now shows the server's real version string
+* Bandages, Splints, Medical Supplies and the Vampire Blade use `VersionedAttribute.MAX_HEALTH`
+* Armor stands (holograms, pedestals) now detect the version themselves instead of asking PaperLib
+* All custom heads (items, androids, capacitors, the debug fish, contributor heads in the credits menu)
+  now go through `VersionedPlayerHead`. Heads keep the same UUID and name as before, so existing heads
+  still stack with new ones
+* `HeadTexture#getAsSkin()` is now deprecated, because it still crashes on 26.x
+
+#### Fixes
+* Fixed Slimefun failing to enable on Paper 26.3 with
+  `IncompatibleClassChangeError: CustomGameProfile cannot inherit from final class GameProfile`,
+  which made every `/sf` command report "plugin is disabled"
+* Fixed Slimefun running in its oldest compatibility mode on 26.x, because PaperLib could not read the version
+* Fixed contributor skin lookups ignoring Mojang's rate limit (HTTP 429) on 26.3. Slimefun now waits
+  5 minutes, as it does on 1.21, instead of continuing to send requests
+
+### Bug fixes from the upstream issue tracker
+
+* Fixed [#4326](https://github.com/Slimefun/Slimefun4/issues/4326): Piglin barter drops always favoured
+  the same items. They are now shuffled on every barter
+* Fixed [#4272](https://github.com/Slimefun/Slimefun4/issues/4272): `/sf give` created stacks of 99.
+  Items are now given in normal stack sizes (64, 16 or 1)
+* Fixed [#4333](https://github.com/Slimefun/Slimefun4/issues/4333): the Auto Drier (and every other
+  machine using the default recipe lookup) still crafted items disabled in `Items.yml`. These recipes
+  are now skipped and hidden from the guide
+* Fixed [#4304](https://github.com/Slimefun/Slimefun4/issues/4304): the Pickaxe of Vein Mining applied
+  the Fortune amount rolled for the mined block to every other block in the vein
+  (for example, mining lapis next to diamond ore gave stacks of diamonds)
+* Fixed [#4268](https://github.com/Slimefun/Slimefun4/issues/4268): breaking a machine while it was
+  processing deleted the item inside. It now drops exactly what was taken from the input slots
+* Fixed [#4260](https://github.com/Slimefun/Slimefun4/issues/4260): items placed into the GPS Control
+  Panel or Geo-Scanner menus (for example with the number keys) were lost. These menus, and the
+  Teleporter, Hologram Projector and Elevator editor menus, no longer accept items
+* Fixed [#3931](https://github.com/Slimefun/Slimefun4/issues/3931): Rainbow Armor recolored normal or
+  custom leather armor that was swapped in right after taking it off
+
+### Build and test changes
+
+* Added the Maven profile `minecraft-26`, which builds against Paper API `26.3.build.249-stable`:
+  `mvn clean package -P minecraft-26`. It skips unit tests, since MockBukkit has no 3.x release for 26.3
+* Added the property `paper.api.version`, so the build can be compiled against any Paper API version
+* Updated Mockito from 5.15.2 to 5.24.0 and JaCoCo from 0.8.12 to 0.8.14, so the tests run on Java 25
+* Added tests for:
+  * year-based version parsing
+  * `VersionedAttribute` and `VersionedPlayerHead`
+  * the 26.3 biome map
+  * `/sf give` stack splitting
+  * the machine changes (consumed inputs, disabled outputs)
+  * Rainbow Armor
+* Result: 1843 tests, 0 failures, 7 skipped (the 7 skips were already in upstream)
+
+### Known issues
+
+* On 26.3, startup logs `[dough: items] Failed to detect items nbt methods ... UnknownServerVersionException`.
+  It is harmless, but vanilla items without a custom name show as `unknown` in a few places (the guide,
+  pedestal labels). Slimefun items are not affected
+* 26.1 and 26.2 are reported as unsupported, because only the 26.3 API was checked
+* The unit tests still run against the 1.21 test server (MockBukkit). The 26.3 build is only checked
+  by compiling it and by running it on a real server
+* [#3010](https://github.com/Slimefun/Slimefun4/issues/3010) (a disabled Hologram Projector keeps its
+  hologram) is not fixed yet
+* None of the upstream bug fixes have been tested on a live server yet
+
+### Which jar to use
+
+| Server | Build command | Jar |
+|---|---|---|
+| Paper 26.3 | `mvn clean package -P minecraft-26` | `target/Slimefun v4.9-UNOFFICIAL.jar` |
+| Paper / Spigot 1.16–1.21 | `mvn clean package` | `target/Slimefun v4.9-UNOFFICIAL.jar` |
+
+Both builds write a jar with the same name. Copy it right after running the build for your server.

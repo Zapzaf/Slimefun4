@@ -28,14 +28,17 @@ public class RainbowArmorTask extends AbstractArmorTask {
     @Override
     @ParametersAreNonnullByDefault
     protected void onPlayerTick(Player p, PlayerProfile profile) {
+        ItemStack[] armor = p.getInventory().getArmorContents();
+
         for (int i = 0; i < 4; i++) {
-            ItemStack item = p.getInventory().getArmorContents()[i];
+            ItemStack item = armor[i];
 
             if (item != null && item.hasItemMeta()) {
                 HashedArmorpiece armorPiece = profile.getArmor()[i];
 
                 armorPiece.getItem().ifPresent(sfArmorPiece -> {
-                    if (sfArmorPiece instanceof RainbowArmorPiece rainbowArmorPiece && rainbowArmorPiece.canUse(p, true)) {
+                    // Fixes #3931 - The cached armor may be outdated, make sure the worn item really is this rainbow piece
+                    if (sfArmorPiece instanceof RainbowArmorPiece rainbowArmorPiece && rainbowArmorPiece.isItem(item) && rainbowArmorPiece.canUse(p, true)) {
                         updateRainbowArmor(item, rainbowArmorPiece);
                     }
                 });

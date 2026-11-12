@@ -1,6 +1,8 @@
 package io.github.thebusybiscuit.slimefun4.implementation.listeners.entity;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
@@ -78,7 +80,9 @@ public class PiglinListener implements Listener {
     @EventHandler
     public void onPiglinDropItem(EntityDropItemEvent e) {
         if (e.getEntity() instanceof Piglin) {
-            Set<ItemStack> drops = Slimefun.getRegistry().getBarteringDrops();
+            // Fixes #4326 - Shuffle the drops, iterating the Set in its fixed order favoured the first items
+            List<ItemStack> drops = new ArrayList<>(Slimefun.getRegistry().getBarteringDrops());
+            Collections.shuffle(drops, ThreadLocalRandom.current());
 
             /*
              * NOTE: Getting a new random number each iteration because multiple items could have the same

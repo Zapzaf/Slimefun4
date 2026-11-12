@@ -96,6 +96,8 @@ public class HologramProjector extends SlimefunItem implements HologramOwner {
 
     private void openEditor(@Nonnull Player p, @Nonnull Block projector) {
         ChestMenu menu = new ChestMenu(Slimefun.getLocalization().getMessage(p, "machines.HOLOGRAM_PROJECTOR.inventory-title"));
+        // Fixes #4260 - Items could be put into empty slots of this menu (and were lost)
+        menu.setEmptySlotsClickable(false);
 
         menu.addItem(0, CustomItemStack.create(Material.NAME_TAG, "&7Text &e(Click to edit)", "", "&f" + ChatColors.color(BlockStorage.getLocationInfo(projector.getLocation(), "text"))));
         menu.addMenuClickHandler(0, (pl, slot, item, action) -> {

@@ -1,6 +1,10 @@
 package io.github.thebusybiscuit.slimefun4.api;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Server;
@@ -62,6 +66,16 @@ public enum MinecraftVersion {
     MINECRAFT_1_21(21, 0, "1.21.x"),
 
     /**
+     * This constant represents Minecraft (Java Edition) Version 26.3 and newer drops of 26.x.
+     * <p>
+     * Since 2026, Minecraft uses year-based version numbers ({@literal "<year>.<drop>.<patch>"}).
+     * Internally the year takes the place of the old "major" version, so {@literal 26.3}
+     * is represented as major version {@literal 26} with patch version {@literal 3}.
+     * Because {@literal 26 > 21}, ordering against all {@literal 1.x} versions is preserved.
+     */
+    MINECRAFT_26_3(26, 3, "26.3+"),
+
+    /**
      * This constant represents an exceptional state in which we were unable
      * to identify the Minecraft Version we are using
      */
@@ -72,6 +86,22 @@ public enum MinecraftVersion {
      * Test and not an actual running Minecraft Server.
      */
     UNIT_TEST("Unit Test Environment", true);
+
+    /**
+     * Matches the {@literal "(MC: 1.21.1)"} / {@literal "(MC: 26.3)"} part of {@link org.bukkit.Bukkit#getVersion()}.
+     * Unlike PaperLib, this allows more than one digit before the first dot.
+     */
+    private static final Pattern MC_VERSION_PATTERN = Pattern.compile("\\(MC: (\\d+)\\.(\\d+)(?:\\.(\\d+))?");
+
+    /**
+     * Matches a leading version number such as {@literal "1.21.1-R0.1-SNAPSHOT"} or {@literal "26.3.build.249-stable"}.
+     */
+    private static final Pattern PLAIN_VERSION_PATTERN = Pattern.compile("^(\\d+)\\.(\\d+)(?:\\.(\\d+))?");
+
+    /**
+     * The first year-based version of Minecraft (26.1).
+     */
+    private static final int FIRST_YEAR_BASED_VERSION = 26;
 
     private final String name;
     private final boolean virtual;
@@ -295,6 +325,75 @@ public enum MinecraftVersion {
         }
 
         return this.minorVersion == -1 ? patchVersion > 0 : this.minorVersion < patchVersion;
+    }
+
+    /**
+     * This parses a Minecraft version from a server version {@link String} into the
+     * numbering scheme used by {@link #isMinecraftVersion(int, int)}.
+     * <p>
+     * Both the legacy and the year-based (2026+) formats are supported:
+     * <ul>
+     * <li>{@literal "git-Paper-123 (MC: 1.21.1)"} returns {@literal [21, 1]}</li>
+     * <li>{@literal "1.21.1-R0.1-SNAPSHOT"} returns {@literal [21, 1]}</li>
+     * <li>{@literal "git-Paper-249 (MC: 26.3)"} returns {@literal [26, 3]}</li>
+     * <li>{@literal "26.3.build.249-stable"} returns {@literal [26, 3]}</li>
+     * </ul>
+     * An {@literal "(MC: ...)"} section takes precedence over a leading version number.
+     *
+     * @param versionString
+     *            The version {@link String}, e.g. {@link org.bukkit.Bukkit#getVersion()}
+     *            or {@link org.bukkit.Bukkit#getBukkitVersion()}
+     *
+     * @return An array of {@literal [major, patch]}, or {@literal null} if it could not be parsed
+     */
+    public static @Nullable int[] parseVersion(@Nullable String versionString) {
+        if (versionString == null) {
+            return null;
+        }
+
+        Matcher matcher = MC_VERSION_PATTERN.matcher(versionString);
+
+        if (!matcher.find()) {
+            matcher = PLAIN_VERSION_PATTERN.matcher(versionString.trim());
+
+            if (!matcher.find()) {
+                return null;
+            }
+        }
+
+        int first = Integer.parseInt(matcher.group(1));
+        int second = Integer.parseInt(matcher.group(2));
+        int third = matcher.group(3) == null ? 0 : Integer.parseInt(matcher.group(3));
+
+        if (first == 1) {
+            // Legacy scheme: 1.<major>.<patch>
+            return new int[] { second, third };
+        } else if (first >= FIRST_YEAR_BASED_VERSION) {
+            // Year-based scheme: <year>.<drop>.<patch>
+            return new int[] { first, second };
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * This finds the {@link MinecraftVersion} matching the given major and patch version.
+     *
+     * @param majorVersion
+     *            The major version, see {@link #parseVersion(String)}
+     * @param patchVersion
+     *            The patch version, see {@link #parseVersion(String)}
+     *
+     * @return The matching {@link MinecraftVersion} or {@link #UNKNOWN} if none matches
+     */
+    public static @Nonnull MinecraftVersion of(int majorVersion, int patchVersion) {
+        for (MinecraftVersion version : values()) {
+            if (version.isMinecraftVersion(majorVersion, patchVersion)) {
+                return version;
+            }
+        }
+
+        return UNKNOWN;
     }
 
 }

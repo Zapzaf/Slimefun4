@@ -222,6 +222,8 @@ public class ResourceManager {
 
         String title = "&4" + Slimefun.getLocalization().getResourceString(p, "tooltips.results");
         ChestMenu menu = new ChestMenu(title);
+        // Fixes #4260 - Items could be put into empty slots of this menu (and were lost)
+        menu.setEmptySlotsClickable(false);
 
         for (int slot : backgroundSlots) {
             menu.addItem(slot, ChestMenuUtils.getBackground(), ChestMenuUtils.getEmptyClickHandler());
