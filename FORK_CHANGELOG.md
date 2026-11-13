@@ -4,14 +4,24 @@ This file lists everything this fork changes compared to the upstream
 [Slimefun4](https://github.com/Slimefun/Slimefun4) `experimental` branch (base commit `5374034c8`).
 The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork leaves untouched.
 
-- [Unreleased (12 Nov 2026)](#unreleased-12-nov-2026)
+- [v4.9-fork.2 (14 Nov 2026)](#v49-fork2-14-nov-2026)
+- [v4.9-fork.1 (12 Nov 2026)](#v49-fork1-12-nov-2026)
   - [Minecraft 26.3 support](#minecraft-263-support)
   - [Bug fixes from the upstream issue tracker](#bug-fixes-from-the-upstream-issue-tracker)
   - [Build and test changes](#build-and-test-changes)
   - [Known issues](#known-issues)
   - [Which jar to use](#which-jar-to-use)
 
-## Unreleased (12 Nov 2026)
+## v4.9-fork.2 (14 Nov 2026)
+
+#### Fixes
+* Fixed `[dough: items] Failed to detect items nbt methods ... UnknownServerVersionException` on 26.3.
+  The bundled dough library could not parse version strings such as `26.3.build.2658-stable`, so vanilla
+  item names showed as `unknown` (machine inventory titles, locked items in the guide, Ancient Pedestal labels)
+* This fork now ships its own copy of dough's `MinecraftVersion`, which reads the leading
+  `<major>.<minor>[.<patch>]` numbers. Dough's original class is excluded from the shaded jar in `pom.xml`
+
+## v4.9-fork.1 (12 Nov 2026)
 
 ### Minecraft 26.3 support
 
@@ -83,9 +93,8 @@ only takes effect when the server runs 26.3 or newer.
 
 ### Known issues
 
-* On 26.3, startup logs `[dough: items] Failed to detect items nbt methods ... UnknownServerVersionException`.
-  It is harmless, but vanilla items without a custom name show as `unknown` in a few places (the guide,
-  pedestal labels). Slimefun items are not affected
+* ~~On 26.3, startup logs `[dough: items] Failed to detect items nbt methods ... UnknownServerVersionException`~~
+  (fixed in v4.9-fork.2)
 * 26.1 and 26.2 are reported as unsupported, because only the 26.3 API was checked
 * The unit tests still run against the 1.21 test server (MockBukkit). The 26.3 build is only checked
   by compiling it and by running it on a real server

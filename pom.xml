@@ -223,6 +223,13 @@
                                 <exclude>META-INF/*</exclude>
                             </excludes>
                         </filter>
+                        <filter>
+                            <!-- Replaced by our own copy, which can parse 26.x server versions -->
+                            <artifact>com.github.Slimefun.dough:dough-api</artifact>
+                            <excludes>
+                                <exclude>io/github/bakedlibs/dough/versions/MinecraftVersion.class</exclude>
+                            </excludes>
+                        </filter>
                     </filters>
                 </configuration>
 
