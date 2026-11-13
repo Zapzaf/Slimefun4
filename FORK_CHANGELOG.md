@@ -4,6 +4,7 @@ This file lists everything this fork changes compared to the upstream
 [Slimefun4](https://github.com/Slimefun/Slimefun4) `experimental` branch (base commit `5374034c8`).
 The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork leaves untouched.
 
+- [v4.9-fork.3 (14 Nov 2026)](#v49-fork3-14-nov-2026)
 - [v4.9-fork.2 (14 Nov 2026)](#v49-fork2-14-nov-2026)
 - [v4.9-fork.1 (12 Nov 2026)](#v49-fork1-12-nov-2026)
   - [Minecraft 26.3 support](#minecraft-263-support)
@@ -11,6 +12,17 @@ The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork le
   - [Build and test changes](#build-and-test-changes)
   - [Known issues](#known-issues)
   - [Which jar to use](#which-jar-to-use)
+
+## v4.9-fork.3 (14 Nov 2026)
+
+#### Tests
+* Added `TestEnhancedFurnaceListener`, which checks the speed, fuel efficiency and fortune of Enhanced Furnaces
+  using the Carbonado Edged Furnace's values (speed 20, efficiency 10, fortune 3). All 9 tests pass on the
+  1.21 test server
+
+#### Known issues
+* Carbonado Edged Furnace speed and fortune were reported as not working on a 26.3 server.
+  This is not fixed yet: the furnace logic passes its tests on 1.21 and no cause has been found for 26.3
 
 ## v4.9-fork.2 (14 Nov 2026)
 
