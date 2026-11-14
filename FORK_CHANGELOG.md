@@ -4,6 +4,7 @@ This file lists everything this fork changes compared to the upstream
 [Slimefun4](https://github.com/Slimefun/Slimefun4) `experimental` branch (base commit `5374034c8`).
 The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork leaves untouched.
 
+- [v4.9-fork.4 (14 Nov 2026)](#v49-fork4-14-nov-2026)
 - [v4.9-fork.3 (14 Nov 2026)](#v49-fork3-14-nov-2026)
 - [v4.9-fork.2 (14 Nov 2026)](#v49-fork2-14-nov-2026)
 - [v4.9-fork.1 (12 Nov 2026)](#v49-fork1-12-nov-2026)
@@ -12,6 +13,23 @@ The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork le
   - [Build and test changes](#build-and-test-changes)
   - [Known issues](#known-issues)
   - [Which jar to use](#which-jar-to-use)
+
+## v4.9-fork.4 (14 Nov 2026)
+
+#### Fixes
+* Enhanced Furnaces (including the Carbonado Edged Furnace) were very slow on 26.3 and ran at about vanilla speed.
+  Their speed is now applied through `FurnaceStartSmeltEvent`: each item's total cook time is divided by the
+  furnace's speed, so a Carbonado Edged Furnace smelts an item in 10 ticks instead of 200.
+  The old method, which pushed the furnace's progress forward every 10 ticks, is only used on 1.16
+
+#### Additions
+* Added `EnhancedFurnaceCookTimeListener`, `EnhancedFurnace#getCookTime(int)` and
+  `EnhancedFurnace#isStartSmeltEventSupported()`
+
+#### Known issues
+* The new furnace speed has not been tested on a live 26.3 server yet
+* Fortune on Enhanced Furnaces was also reported as not working on 26.3. It passes its tests on 1.21,
+  and this release does not change it
 
 ## v4.9-fork.3 (14 Nov 2026)
 

@@ -12,6 +12,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Furnace;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
+import org.bukkit.event.inventory.FurnaceStartSmeltEvent;
 import org.bukkit.inventory.FurnaceRecipe;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterAll;
@@ -53,6 +54,7 @@ class TestEnhancedFurnaceListener {
         server = MockBukkit.mock();
         Slimefun plugin = MockBukkit.load(Slimefun.class);
         new EnhancedFurnaceListener(plugin);
+        new EnhancedFurnaceCookTimeListener(plugin);
 
         // Enhanced Furnaces use a BlockTicker, so they are disabled unless tickers are enabled
         Slimefun.getCfg().setValue("URID.enable-tickers", true);
@@ -124,44 +126,54 @@ class TestEnhancedFurnaceListener {
         Assertions.assertEquals(EFFICIENCY - 1, carbonadoFurnace.getFuelEfficiency());
     }
 
+    private @Nonnull FurnaceStartSmeltEvent startSmelting(@Nonnull Block block) {
+        FurnaceRecipe recipe = new FurnaceRecipe(new NamespacedKey("minecraft", "iron_ingot_from_smelting_raw_iron"), new ItemStack(Material.IRON_INGOT), Material.RAW_IRON, 0.7F, 200);
+        FurnaceStartSmeltEvent event = new FurnaceStartSmeltEvent(block, new ItemStack(Material.RAW_IRON), recipe, 200);
+        server.getPluginManager().callEvent(event);
+        return event;
+    }
+
     @Test
-    @DisplayName("Test that the speed modifier advances the cook time on every tick")
+    @DisplayName("Test that the Carbonado Edged Furnace smelts 20 times faster")
     void testSpeedModifier() {
         BlockMock block = placeFurnace(new ItemStack(Material.RAW_IRON));
+
+        // A normal furnace takes 200 ticks (10 seconds), speed 20 makes that 10 ticks
+        Assertions.assertEquals(10, startSmelting(block).getTotalCookTime());
+    }
+
+    @Test
+    @DisplayName("Test the cook time of every furnace speed")
+    void testCookTimes() {
+        Assertions.assertEquals(10, carbonadoFurnace.getCookTime(200));
+        Assertions.assertEquals(5, carbonadoFurnace.getCookTime(100));
+        Assertions.assertEquals(1, carbonadoFurnace.getCookTime(1));
+        Assertions.assertEquals(1, carbonadoFurnace.getCookTime(0));
+    }
+
+    @Test
+    @DisplayName("Test that a normal furnace is not sped up")
+    void testNormalFurnaceIsNotSpedUp() {
+        Block block = world.getBlockAt(TestUtilities.randomInt(), 64, TestUtilities.randomInt());
+        block.setType(Material.FURNACE);
+
+        Assertions.assertEquals(200, startSmelting(block).getTotalCookTime());
+    }
+
+    @Test
+    @DisplayName("Test that the ticker no longer changes the progress on 1.17+")
+    void testTickerDoesNotChangeProgress() {
+        Assertions.assertTrue(EnhancedFurnace.isStartSmeltEventSupported());
+
+        BlockMock block = placeFurnace(new ItemStack(Material.RAW_IRON));
         Furnace before = (Furnace) block.getState();
-        before.setCookTime((short) 1);
+        before.setCookTime((short) 5);
         before.update(true, false);
 
         carbonadoFurnace.getItemHandler().tick(block, carbonadoFurnace, null);
 
-        // Speed 20 adds 19 * 10 = 190 ticks of progress on top of the vanilla tick
         Furnace after = (Furnace) block.getState();
-        Assertions.assertEquals(191, after.getCookTime());
-    }
-
-    @Test
-    @DisplayName("Test that the speed modifier never completes a smelt by itself")
-    void testSpeedModifierIsCapped() {
-        BlockMock block = placeFurnace(new ItemStack(Material.RAW_IRON));
-        Furnace before = (Furnace) block.getState();
-        before.setCookTime((short) 150);
-        before.update(true, false);
-
-        carbonadoFurnace.getItemHandler().tick(block, carbonadoFurnace, null);
-
-        Furnace after = (Furnace) block.getState();
-        Assertions.assertEquals(199, after.getCookTime());
-    }
-
-    @Test
-    @DisplayName("Test that an idle furnace is not sped up")
-    void testIdleFurnaceIsNotSpedUp() {
-        BlockMock block = placeFurnace(new ItemStack(Material.RAW_IRON));
-
-        carbonadoFurnace.getItemHandler().tick(block, carbonadoFurnace, null);
-
-        Furnace after = (Furnace) block.getState();
-        Assertions.assertEquals(0, after.getCookTime());
+        Assertions.assertEquals(5, after.getCookTime());
     }
 
     @Test

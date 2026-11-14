@@ -78,6 +78,8 @@ import io.github.thebusybiscuit.slimefun4.implementation.listeners.DeathpointLis
 import io.github.thebusybiscuit.slimefun4.implementation.listeners.DebugFishListener;
 import io.github.thebusybiscuit.slimefun4.implementation.listeners.DispenserListener;
 import io.github.thebusybiscuit.slimefun4.implementation.listeners.ElytraImpactListener;
+import io.github.thebusybiscuit.slimefun4.implementation.items.blocks.EnhancedFurnace;
+import io.github.thebusybiscuit.slimefun4.implementation.listeners.EnhancedFurnaceCookTimeListener;
 import io.github.thebusybiscuit.slimefun4.implementation.listeners.EnhancedFurnaceListener;
 import io.github.thebusybiscuit.slimefun4.implementation.listeners.ExplosionsListener;
 import io.github.thebusybiscuit.slimefun4.implementation.listeners.GadgetsListener;
@@ -629,6 +631,11 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
         new DispenserListener(this);
         new BlockListener(this);
         new EnhancedFurnaceListener(this);
+
+        if (EnhancedFurnace.isStartSmeltEventSupported()) {
+            new EnhancedFurnaceCookTimeListener(this);
+        }
+
         new ItemPickupListener(this);
         new ItemDropListener(this);
         new DeathpointListener(this);
