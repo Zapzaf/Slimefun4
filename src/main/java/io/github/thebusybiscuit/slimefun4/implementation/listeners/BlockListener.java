@@ -70,6 +70,12 @@ public class BlockListener implements Listener {
     public void onBlockPlaceExisting(BlockPlaceEvent e) {
         Block block = e.getBlock();
 
+        if (e.getBlockReplacedState().getType().isAir() && Slimefun.getTickerTask().isMovedSoon(block.getLocation())) {
+            // The data here belongs to a block that just moved away (e.g. an Android).
+            // It is not a ghost block: dropping it would duplicate the item and clearing it would wipe the moved block's data.
+            return;
+        }
+
         // Fixes #2636 - This will solve the "ghost blocks" issue
         if (e.getBlockReplacedState().getType().isAir() && BlockStorage.hasBlockInfo(block) && !Slimefun.getTickerTask().isDeletedSoon(block.getLocation())) {
             SlimefunItem sfItem = BlockStorage.check(block);

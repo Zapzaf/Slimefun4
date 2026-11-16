@@ -59,6 +59,7 @@ import me.mrCookieSlime.Slimefun.Objects.handlers.BlockTicker;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenuPreset;
+import me.mrCookieSlime.Slimefun.api.inventory.DirtyChestMenu;
 import me.mrCookieSlime.Slimefun.api.item_transport.ItemTransportFlow;
 
 public class ProgrammableAndroid extends SlimefunItem implements InventoryBlock, RecipeDisplayItem {
@@ -127,6 +128,16 @@ public class ProgrammableAndroid extends SlimefunItem implements InventoryBlock,
 
             @Override
             public int[] getSlotsAccessedByItemTransport(ItemTransportFlow flow) {
+                return new int[0];
+            }
+
+            @Override
+            public int[] getSlotsAccessedByItemTransport(DirtyChestMenu menu, ItemTransportFlow flow, ItemStack item) {
+                // Cargo may only insert valid fuel into the fuel slot
+                if (flow == ItemTransportFlow.INSERT && item != null && ProgrammableAndroid.this.isFuel(item)) {
+                    return new int[] { 43 };
+                }
+
                 return new int[0];
             }
         };
@@ -812,6 +823,16 @@ public class ProgrammableAndroid extends SlimefunItem implements InventoryBlock,
             }
 
             return true;
+        }
+
+        return false;
+    }
+
+    private boolean isFuel(@Nonnull ItemStack item) {
+        for (MachineFuel fuel : fuelTypes) {
+            if (fuel.test(item)) {
+                return true;
+            }
         }
 
         return false;

@@ -279,6 +279,23 @@ public class TickerTask implements Runnable {
     }
 
     /**
+     * This method checks if the data at the given {@link Location} is queued to be moved
+     * somewhere else on the next tick, for example by a moving Programmable Android.
+     * The block at this {@link Location} may already be air, but its data must not be
+     * treated as a leftover "ghost block".
+     *
+     * @param l
+     *            The {@link Location} to check
+     *
+     * @return Whether the data at this {@link Location} will be moved away on the next tick
+     */
+    public boolean isMovedSoon(@Nonnull Location l) {
+        Validate.notNull(l, "Null is not a valid Location!");
+
+        return movingQueue.containsKey(l);
+    }
+
+    /**
      * This method checks if a given {@link Location} will be deleted on the next tick.
      * 
      * @param l

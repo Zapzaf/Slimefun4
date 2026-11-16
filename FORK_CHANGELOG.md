@@ -4,6 +4,7 @@ This file lists everything this fork changes compared to the upstream
 [Slimefun4](https://github.com/Slimefun/Slimefun4) `experimental` branch (base commit `5374034c8`).
 The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork leaves untouched.
 
+- [v4.9-fork.5 (16 Nov 2026)](#v49-fork5-16-nov-2026)
 - [v4.9-fork.4 (14 Nov 2026)](#v49-fork4-14-nov-2026)
 - [v4.9-fork.3 (14 Nov 2026)](#v49-fork3-14-nov-2026)
 - [v4.9-fork.2 (14 Nov 2026)](#v49-fork2-14-nov-2026)
@@ -13,6 +14,27 @@ The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork le
   - [Build and test changes](#build-and-test-changes)
   - [Known issues](#known-issues)
   - [Which jar to use](#which-jar-to-use)
+
+## v4.9-fork.5 (16 Nov 2026)
+
+#### Changes
+* Cargo output nodes can now insert fuel into Programmable Androids. Upstream Slimefun blocks all cargo
+  access to androids. Cargo only fills the fuel slot, and only with fuel that android's tier can burn
+  (solid fuel for tier 1, liquid for tier 2, nuclear for tier 3). Cargo still cannot take items out of an android
+
+#### Fixes
+* Fixed an Android duplication exploit. When an android moved, its old spot was air right away, but its data
+  only moved at the end of the ticker cycle. A player who placed a block into that spot in between triggered the
+  "ghost block" fix (#2636), which dropped a free android item and deleted the data. The android at its new spot
+  then lost its script and fuel and stopped moving. `BlockListener` now ignores spots whose data is about to be
+  moved, using the new `TickerTask#isMovedSoon(Location)`
+
+#### Tests
+* Added `TestAndroidRefuel`, which checks refuelling from an Android Interface (Fuel), refuelling through the
+  "Pull fuel" script instruction, and cargo insertion into the fuel slot. All 6 tests pass on the 1.21 test server
+* Added `TestAndroidMove`, which checks that a moved android keeps its data and fuel, and that placing a block
+  into the spot it just left does not drop an android item. Both tests pass on the 1.21 test server, and the
+  duplication test fails without the fix
 
 ## v4.9-fork.4 (14 Nov 2026)
 
