@@ -4,6 +4,7 @@ This file lists everything this fork changes compared to the upstream
 [Slimefun4](https://github.com/Slimefun/Slimefun4) `experimental` branch (base commit `5374034c8`).
 The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork leaves untouched.
 
+- [v4.9-fork.7 (17 Nov 2026)](#v49-fork7-17-nov-2026)
 - [v4.9-fork.6 (17 Nov 2026)](#v49-fork6-17-nov-2026)
 - [v4.9-fork.5 (16 Nov 2026)](#v49-fork5-16-nov-2026)
 - [v4.9-fork.4 (14 Nov 2026)](#v49-fork4-14-nov-2026)
@@ -15,6 +16,17 @@ The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork le
   - [Build and test changes](#build-and-test-changes)
   - [Known issues](#known-issues)
   - [Which jar to use](#which-jar-to-use)
+
+## v4.9-fork.7 (17 Nov 2026)
+
+#### Fixes
+* Fixed Slimefun asking Mojang for every contributor skin on each restart, which got servers rate-limited
+  (HTTP 429, "Attempted to refresh skin cache"). `GitHubTask` ignored the skins already saved in
+  `cache/github/skins.yml`; it now uses them and only looks up skins it doesn't have yet. Retries no longer pile
+  up: only one later run is scheduled at a time
+
+#### Tests
+* `TestGitHubTask`: a skin saved by an earlier run is used without a request (the old code made 2)
 
 ## v4.9-fork.6 (17 Nov 2026)
 
