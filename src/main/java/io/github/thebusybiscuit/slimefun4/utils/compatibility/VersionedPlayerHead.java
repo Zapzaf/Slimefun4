@@ -154,20 +154,35 @@ public final class VersionedPlayerHead {
             return PlayerSkin.fromPlayerUUID(plugin, uuid).thenApply(skin -> skin.getProfile().getBase64Texture());
         }
 
-        return Bukkit.createPlayerProfile(uuid).update().thenApply(profile -> {
-            /*
-             * When Mojang rate-limits us (HTTP 429) or is unavailable, Paper only logs a warning
-             * and returns the profile without any textures property. Every real profile has one
-             * (even players with a default skin), so treat a missing one as a failed lookup.
-             * This lets callers back off instead of firing more requests.
-             */
-            if (profile instanceof com.destroystokyo.paper.profile.PlayerProfile paperProfile && !paperProfile.hasTextures()) {
-                throw new IllegalStateException("Mojang did not return a profile for " + uuid + ", likely rate-limited (HTTP 429)");
-            }
+        return Bukkit.createPlayerProfile(uuid).update().thenApply(VersionedPlayerHead::textureOf);
+    }
 
-            URL skin = profile.getTextures().getSkin();
-            return skin == null ? null : toBase64(skin.toString());
-        });
+    /**
+     * This returns the skin of an updated {@link PlayerProfile} as a Base64-encoded texture json.
+     * <p>
+     * When Mojang rate-limits us (HTTP 429) or is unavailable, the server only logs a warning and
+     * returns the profile without any textures. Every real profile has them (even players with a
+     * default skin), so a missing one is treated as a failed lookup. This lets callers back off
+     * instead of firing more requests.
+     * <p>
+     * Only the Bukkit {@link PlayerProfile} API is used here: on Paper 26.3 the Bukkit profile also
+     * implements Paper's legacy {@literal com.destroystokyo.paper.profile.PlayerProfile}, but every
+     * method of that interface throws {@link UnsupportedOperationException} ("Do not cast to ...").
+     *
+     * @param profile
+     *            The updated {@link PlayerProfile}
+     *
+     * @return The texture, or {@literal null} if the player has no custom skin
+     */
+    static @Nullable String textureOf(@Nonnull PlayerProfile profile) {
+        PlayerTextures textures = profile.getTextures();
+
+        if (textures.isEmpty()) {
+            throw new IllegalStateException("Mojang did not return a profile for " + profile.getUniqueId() + ", likely rate-limited (HTTP 429)");
+        }
+
+        URL skin = textures.getSkin();
+        return skin == null ? null : toBase64(skin.toString());
     }
 
     /**

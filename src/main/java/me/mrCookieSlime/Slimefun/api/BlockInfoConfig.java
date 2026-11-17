@@ -3,6 +3,7 @@ package me.mrCookieSlime.Slimefun.api;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -32,7 +33,7 @@ public class BlockInfoConfig extends Config {
     private final Map<String, String> data;
 
     public BlockInfoConfig() {
-        this(new HashMap<>());
+        this(new ConcurrentHashMap<>());
     }
 
     public BlockInfoConfig(Map<String, String> data) {

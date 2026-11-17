@@ -4,6 +4,7 @@ This file lists everything this fork changes compared to the upstream
 [Slimefun4](https://github.com/Slimefun/Slimefun4) `experimental` branch (base commit `5374034c8`).
 The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork leaves untouched.
 
+- [v4.9-fork.6 (17 Nov 2026)](#v49-fork6-17-nov-2026)
 - [v4.9-fork.5 (16 Nov 2026)](#v49-fork5-16-nov-2026)
 - [v4.9-fork.4 (14 Nov 2026)](#v49-fork4-14-nov-2026)
 - [v4.9-fork.3 (14 Nov 2026)](#v49-fork3-14-nov-2026)
@@ -14,6 +15,26 @@ The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork le
   - [Build and test changes](#build-and-test-changes)
   - [Known issues](#known-issues)
   - [Which jar to use](#which-jar-to-use)
+
+## v4.9-fork.6 (17 Nov 2026)
+
+#### Fixes
+* Fixed Slimefun blocks turning into vanilla blocks after being broken and placed again in the same spot many times.
+  The energy network ticks asynchronously and still wrote charge to a machine the player had just broken. When that
+  write ran at the same moment the player placed a new block there, it could replace the new block's data with data
+  that had no `id`, so the block acted like a vanilla block. `BlockStorage#addBlockInfo` now gets or creates the
+  data in one atomic step, and `BlockInfoConfig` uses a `ConcurrentHashMap` because it is shared between threads
+* Fixed a capacitor placed where one was just broken getting the old capacitor's charge. `EnergyNetComponent`
+  (`setCharge`, `addCharge`, `removeCharge`) no longer writes charge to a spot that holds no Slimefun block
+* Fixed "Attempted to refresh skin cache ... Do not cast to com.destroystokyo.paper.profile.PlayerProfile" on 26.3.
+  Contributor skins are now read with the Bukkit `PlayerProfile` API. When Mojang rate-limits the lookup (HTTP 429),
+  Slimefun now logs "likely rate-limited (HTTP 429)" and waits before trying again
+* Removed a duplicate `dough-api` dependency from `pom.xml`
+
+#### Tests
+* `TestBlockStorageRace`: places a block and writes energy to the same spot at the same instant 20,000 times.
+  Before the fix 32 blocks lost their id; now none do
+* `TestVersionedPlayerHead`: skins of fetched profiles, and profiles without textures (rate-limited)
 
 ## v4.9-fork.5 (16 Nov 2026)
 

@@ -461,7 +461,7 @@ public class BlockStorage {
 
     @Nonnull
     private static Map<String, String> parseJSON(String json) {
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new ConcurrentHashMap<>(); // shared between the main thread and async tickers
 
         if (json != null && json.length() > 2) {
             JsonParser parser = new JsonParser();
@@ -539,12 +539,21 @@ public class BlockStorage {
     }
 
     public static void addBlockInfo(Location l, String key, String value, boolean updateTicker) {
-        Config cfg = getLocationInfo(l);
+        BlockStorage storage = getStorage(l.getWorld());
 
-        if (cfg == emptyBlockData) {
-            cfg = new BlockInfoConfig();
+        if (storage == null) {
+            // Logs the "non-registered World" warning
+            setBlockInfo(l, new BlockInfoConfig(), updateTicker);
+            return;
         }
 
+        /*
+         * Get or create the data atomically. Async tickers (e.g. the energy network) write to
+         * block data while players place blocks on the main thread. With a separate get and put,
+         * an async write that read "no data" could overwrite a block that was just placed, and the
+         * block would lose its id and turn into a vanilla block.
+         */
+        Config cfg = storage.storage.computeIfAbsent(l, k -> new BlockInfoConfig());
         cfg.setValue(key, value);
         setBlockInfo(l, cfg, updateTicker);
     }

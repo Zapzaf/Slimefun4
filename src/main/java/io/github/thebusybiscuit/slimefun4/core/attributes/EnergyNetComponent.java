@@ -119,6 +119,16 @@ public interface EnergyNetComponent extends ItemAttribute {
      * @param charge
      *            The new charge
      */
+    /**
+     * Whether a Slimefun block is still placed at this {@link Location}.
+     * The energy network ticks asynchronously and caches its components, so it can still write
+     * charge to a block the player just broke. That must not create data at an empty location,
+     * which a block placed there next would pick up.
+     */
+    private static boolean isStillHere(@Nonnull Location l) {
+        return BlockStorage.hasBlockInfo(l);
+    }
+
     default void setCharge(@Nonnull Location l, int charge) {
         Validate.notNull(l, "Location was null!");
         Validate.isTrue(charge >= 0, "You can only set a charge of zero or more!");
@@ -127,7 +137,7 @@ public interface EnergyNetComponent extends ItemAttribute {
             int capacity = getCapacity();
 
             // This method only makes sense if we can actually store energy
-            if (capacity > 0) {
+            if (capacity > 0 && isStillHere(l)) {
                 charge = NumberUtils.clamp(0, charge, capacity);
 
                 // Do we even need to update the value?
@@ -153,7 +163,7 @@ public interface EnergyNetComponent extends ItemAttribute {
             int capacity = getCapacity();
 
             // This method only makes sense if we can actually store energy
-            if (capacity > 0) {
+            if (capacity > 0 && isStillHere(l)) {
                 int currentCharge = getCharge(l);
 
                 // Check if there is even space for new energy
@@ -180,7 +190,7 @@ public interface EnergyNetComponent extends ItemAttribute {
             int capacity = getCapacity();
 
             // This method only makes sense if we can actually store energy
-            if (capacity > 0) {
+            if (capacity > 0 && isStillHere(l)) {
                 int currentCharge = getCharge(l);
 
                 // Check if there is even energy stored

@@ -95,6 +95,24 @@ class TestVersionedPlayerHead {
     }
 
     @Test
+    @DisplayName("Test that the skin of a fetched profile is returned as a Base64 texture")
+    void testTextureOfProfileWithSkin() throws Exception {
+        PlayerProfile profile = VersionedPlayerHead.createProfile(UUID.randomUUID(), new java.net.URI(URL).toURL());
+
+        String texture = VersionedPlayerHead.textureOf(profile);
+
+        Assertions.assertEquals(URL, VersionedPlayerHead.getTextureUrl(texture).toString());
+    }
+
+    @Test
+    @DisplayName("Test that a fetched profile without textures (Mojang rate-limit) fails, so the caller backs off")
+    void testTextureOfProfileWithoutTextures() {
+        PlayerProfile profile = org.bukkit.Bukkit.createPlayerProfile(UUID.randomUUID(), "Contributor");
+
+        Assertions.assertThrows(IllegalStateException.class, () -> VersionedPlayerHead.textureOf(profile));
+    }
+
+    @Test
     @DisplayName("Test that heads with the same texture are similar (so they stack)")
     void testSameTextureIsSimilar() {
         String base64 = VersionedPlayerHead.toBase64(URL);
