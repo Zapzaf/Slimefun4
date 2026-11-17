@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
@@ -34,6 +35,9 @@ class GitHubTask implements Runnable {
 
     private static final int MAX_REQUESTS_PER_MINUTE = 16;
     private final GitHubService gitHubService;
+
+    /** Whether a later #grabTextures() is already scheduled, so retries never pile up. */
+    private final AtomicBoolean retryScheduled = new AtomicBoolean();
 
     GitHubTask(@Nonnull GitHubService github) {
         gitHubService = github;
@@ -78,7 +82,7 @@ class GitHubTask implements Runnable {
 
         if (requests >= MAX_REQUESTS_PER_MINUTE && Slimefun.instance() != null && Slimefun.instance().isEnabled()) {
             // Slow down API requests and wait a minute after more than x requests were made
-            Bukkit.getScheduler().runTaskLaterAsynchronously(Slimefun.instance(), this::grabTextures, 2 * 60 * 20L);
+            scheduleRetry(2 * 60 * 20L);
         }
 
         for (GitHubConnector connector : gitHubService.getConnectors()) {
@@ -95,8 +99,35 @@ class GitHubTask implements Runnable {
         gitHubService.saveCache();
     }
 
-    private int requestTexture(@Nonnull Contributor contributor, @Nonnull Map<String, String> skins) {
+    /**
+     * Runs #grabTextures() again after the given delay, unless a run is already scheduled.
+     */
+    private void scheduleRetry(long delayTicks) {
+        Slimefun plugin = Slimefun.instance();
+
+        if (plugin == null || !plugin.isEnabled() || !retryScheduled.compareAndSet(false, true)) {
+            return;
+        }
+
+        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+            retryScheduled.set(false);
+            grabTextures();
+        }, delayTicks);
+    }
+
+    int requestTexture(@Nonnull Contributor contributor, @Nonnull Map<String, String> skins) {
         if (!contributor.hasTexture()) {
+            /*
+             * Use the skin an earlier run saved instead of asking Mojang again. Without this, every
+             * restart looked up every contributor's skin, which got the server rate-limited (HTTP 429).
+             */
+            String cached = gitHubService.getCachedTexture(contributor.getName());
+
+            if (cached != null) {
+                contributor.setTexture(cached);
+                return 0;
+            }
+
             try {
                 if (skins.containsKey(contributor.getMinecraftName())) {
                     contributor.setTexture(skins.get(contributor.getMinecraftName()));
@@ -119,7 +150,7 @@ class GitHubTask implements Runnable {
 
                 // Retry after 5 minutes if it was just rate-limiting
                 if (msg != null && msg.contains("429")) {
-                    Bukkit.getScheduler().runTaskLaterAsynchronously(Slimefun.instance(), this::grabTextures, 5 * 60 * 20L);
+                    scheduleRetry(5 * 60 * 20L);
                 }
 
                 return -1;
