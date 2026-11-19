@@ -471,7 +471,7 @@ public class SlimefunItem implements Placeable {
                  * Any other settings will remain as default.
                  */
                 state = ItemState.ENABLED;
-            } else if (Slimefun.getItemCfg().getBoolean(id + ".enabled")) {
+            } else if (Slimefun.getItemCfg().getBoolean(id + ".enabled") && !DisabledItems.isListed(id)) {
                 // The item has been enabled.
                 state = ItemState.ENABLED;
                 useableInWorkbench = Slimefun.getItemCfg().getBoolean(id + ".can-be-used-in-workbenches");

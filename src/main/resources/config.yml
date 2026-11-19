@@ -45,6 +45,13 @@ options:
   - CARGO_NODE_OUTPUT
   - CARGO_NODE_OUTPUT_ADVANCED
 
+  # Slimefun items that are turned off, by their id (the same as enabled: false in Items.yml).
+  # They can't be crafted, are hidden from the guide, and copies players already have do nothing.
+  # KNOWLEDGE_TOME (Tome of Knowledge Sharing) copies all of one player's researches to another.
+  # Use [] to turn nothing off. Changes need a restart.
+  disabled-items:
+  - KNOWLEDGE_TOME
+
 guide:
   show-vanilla-recipes: true
   receive-on-first-join: true

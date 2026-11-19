@@ -4,6 +4,7 @@ This file lists everything this fork changes compared to the upstream
 [Slimefun4](https://github.com/Slimefun/Slimefun4) `experimental` branch (base commit `5374034c8`).
 The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork leaves untouched.
 
+- [v4.9-fork.9 (19 Nov 2026)](#v49-fork9-19-nov-2026)
 - [v4.9-fork.8 (19 Nov 2026)](#v49-fork8-19-nov-2026)
 - [v4.9-fork.7 (17 Nov 2026)](#v49-fork7-17-nov-2026)
 - [v4.9-fork.6 (17 Nov 2026)](#v49-fork6-17-nov-2026)
@@ -17,6 +18,15 @@ The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork le
   - [Build and test changes](#build-and-test-changes)
   - [Known issues](#known-issues)
   - [Which jar to use](#which-jar-to-use)
+
+## v4.9-fork.9 (19 Nov 2026)
+
+#### Additions
+* New option `options.disabled-items` in `config.yml`: a list of Slimefun item IDs that are turned off, the same as
+  `enabled: false` in `Items.yml`. A listed item can't be crafted, is hidden from the guide, and copies players
+  already have do nothing when used. Changes need a restart.
+* `KNOWLEDGE_TOME` (Tome of Knowledge Sharing) is on that list by default, so players can't copy all of another
+  player's researches. Existing configs get the option on the next start. Use `disabled-items: []` to turn it back on.
 
 ## v4.9-fork.8 (19 Nov 2026)
 
