@@ -109,6 +109,10 @@ public class BlockListener implements Listener {
 
             if (!sfItem.canUse(player, true)) {
                 e.setCancelled(true);
+            } else if (DisabledPlacement.isDisabledFor(sfItem, player)) {
+                // options.disabled-block-placement in the config
+                Slimefun.getLocalization().sendMessage(player, "messages.placement-disabled", true);
+                e.setCancelled(true);
             } else {
                 Block block = e.getBlockPlaced();
 

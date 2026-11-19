@@ -74,6 +74,9 @@ permissions:
   slimefun.cargo.bypass:
     description: Allows you to edit other Players Cargo Blocks
     default: op
+  slimefun.place.bypass:
+    description: Allows you to place Slimefun blocks listed in options.disabled-block-placement
+    default: false
   slimefun.inventory.bypass:
     description: Allows you to open all Slimefun Machines
     default: op

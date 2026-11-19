@@ -27,6 +27,7 @@ import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemSetting;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
+import io.github.thebusybiscuit.slimefun4.implementation.listeners.DisabledPlacement;
 import io.github.thebusybiscuit.slimefun4.api.items.settings.MaterialTagSetting;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.attributes.NotPlaceable;
@@ -104,7 +105,7 @@ public class BlockPlacer extends SlimefunItem {
 
                 if (item != null) {
                     // Check if this Item can even be placed down
-                    if (!(item instanceof NotPlaceable) && !item.isDisabledIn(dispenser.getWorld())) {
+                    if (!(item instanceof NotPlaceable) && !item.isDisabledIn(dispenser.getWorld()) && !DisabledPlacement.isDisabledFor(item, null)) {
                         placeSlimefunBlock(item, e.getItem(), facedBlock, dispenser);
                     }
                 } else if (!Slimefun.getIntegrations().isCustomItem(e.getItem())) {

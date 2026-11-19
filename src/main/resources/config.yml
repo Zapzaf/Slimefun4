@@ -23,6 +23,17 @@ options:
   drop-excess-sf-give-items: false
   backup-data: true
   drop-block-creative: true
+  # Slimefun items (by ID) that can't be placed down, for example blocks that cost too much
+  # performance. They still work otherwise (crafting, as ingredients), and blocks placed before
+  # stay where they are. Block Placers can't place them either.
+  # Players with the permission slimefun.place.bypass (nobody by default) can still place them.
+  # Find an item's ID in /sf search or in Items.yml. Example:
+  # disabled-block-placement:
+  # - CARGO_NODE_INPUT
+  # - CARGO_NODE_OUTPUT
+  # - CARGO_NODE_OUTPUT_ADVANCED
+  # - ORE_WASHER
+  disabled-block-placement: []
 
 guide:
   show-vanilla-recipes: true
