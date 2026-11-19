@@ -157,6 +157,12 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
      */
     private static Slimefun instance;
 
+    /** The chat prefix: "SF » message", with a space on both sides of the » (alt code 0187). */
+    public static final String CHAT_PREFIX = "&a&lSF &7» ";
+
+    /** The chat prefix up to fork.7, "Slimefun 4> message"; replaced by {@link #CHAT_PREFIX} if a server never changed it. */
+    static final String OLD_CHAT_PREFIX = "&a&lSlimefun 4&7> ";
+
     /**
      * Keep track of which {@link MinecraftVersion} we are on.
      */
@@ -298,6 +304,13 @@ public class Slimefun extends JavaPlugin implements SlimefunAddon {
         // Set up localization
         logger.log(Level.INFO, "Loading language files...");
         String chatPrefix = config.getString("options.chat-prefix");
+
+        // Servers that never changed the old default prefix ("Slimefun 4> message") get the new one ("SF » message")
+        if (OLD_CHAT_PREFIX.equals(chatPrefix)) {
+            chatPrefix = CHAT_PREFIX;
+            config.setValue("options.chat-prefix", chatPrefix);
+            config.save();
+        }
         String serverDefaultLanguage = config.getString("options.language");
         local = new LocalizationService(this, chatPrefix, serverDefaultLanguage);
 
