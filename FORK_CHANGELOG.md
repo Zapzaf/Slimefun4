@@ -4,6 +4,7 @@ This file lists everything this fork changes compared to the upstream
 [Slimefun4](https://github.com/Slimefun/Slimefun4) `experimental` branch (base commit `5374034c8`).
 The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork leaves untouched.
 
+- [v4.9-fork.8 (19 Nov 2026)](#v49-fork8-19-nov-2026)
 - [v4.9-fork.7 (17 Nov 2026)](#v49-fork7-17-nov-2026)
 - [v4.9-fork.6 (17 Nov 2026)](#v49-fork6-17-nov-2026)
 - [v4.9-fork.5 (16 Nov 2026)](#v49-fork5-16-nov-2026)
@@ -16,6 +17,29 @@ The upstream history is kept in [CHANGELOG.md](CHANGELOG.md), which this fork le
   - [Build and test changes](#build-and-test-changes)
   - [Known issues](#known-issues)
   - [Which jar to use](#which-jar-to-use)
+
+## v4.9-fork.8 (19 Nov 2026)
+
+#### Additions
+* New option `options.disabled-block-placement` in `config.yml`: a list of Slimefun item IDs that players and
+  Block Placers can't place, for blocks that cost too much performance. The items still work otherwise (crafting,
+  recipes, as ingredients), blocks placed before stay, and players with the new permission `slimefun.place.bypass`
+  (nobody by default, not even operators) can still place them. Players get the message `messages.placement-disabled`
+* By default it lists the cargo network, which the Networks addon replaces: `CARGO_MANAGER` (Network Controller),
+  `CARGO_NODE` (Network Bridge), `CARGO_NODE_INPUT` (Network Grabber, Vanilla Grabber, Network Importer),
+  `CARGO_NODE_OUTPUT` and `CARGO_NODE_OUTPUT_ADVANCED` (Network Pusher, Vanilla Pusher, Network Exporter).
+  `REACTOR_ACCESS_PORT` stays placeable, since reactors only take items through it, also from Networks pushers.
+  The cargo items can still be crafted, because Networks uses them in its recipes. A config that already has the
+  option keeps its own list
+
+#### Changes
+* The chat prefix is now `SF » message` (`&a&lSF &7» `) instead of `Slimefun 4> message`. Configs that still have
+  the old default prefix are switched on startup; a customised prefix is kept
+
+#### Tests
+* `TestDisabledBlockPlacement`: listed blocks are refused, others place, the bypass permission, an empty list,
+  Block Placers, and the default list
+* `TestChatPrefix`: the default prefix, and that messages read `SF » message`
 
 ## v4.9-fork.7 (17 Nov 2026)
 
