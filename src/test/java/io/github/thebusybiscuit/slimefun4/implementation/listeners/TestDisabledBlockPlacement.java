@@ -125,6 +125,25 @@ class TestDisabledBlockPlacement {
     }
 
     @Test
+    @DisplayName("By default the cargo network can't be placed (Networks replaces it), but the Reactor Access Port and Ore Washer can")
+    void defaultList() throws java.io.IOException {
+        org.bukkit.configuration.file.YamlConfiguration defaults = new org.bukkit.configuration.file.YamlConfiguration();
+        try (java.io.Reader reader = new java.io.InputStreamReader(
+                Slimefun.class.getResourceAsStream("/config.yml"), java.nio.charset.StandardCharsets.UTF_8)) {
+            defaults.load(reader);
+        } catch (org.bukkit.configuration.InvalidConfigurationException e) {
+            throw new java.io.IOException(e);
+        }
+
+        Assertions.assertEquals(
+                List.of("CARGO_MANAGER", "CARGO_NODE", "CARGO_NODE_INPUT", "CARGO_NODE_OUTPUT", "CARGO_NODE_OUTPUT_ADVANCED"),
+                defaults.getStringList(DisabledPlacement.CONFIG_KEY));
+        // Reactors only take items through the access port, also from Networks pushers
+        Assertions.assertFalse(defaults.getStringList(DisabledPlacement.CONFIG_KEY).contains("REACTOR_ACCESS_PORT"));
+        Assertions.assertFalse(defaults.getStringList(DisabledPlacement.CONFIG_KEY).contains("ORE_WASHER"));
+    }
+
+    @Test
     @DisplayName("Block Placers check the same list, with no bypass")
     void blockPlacerCheck() {
         Assertions.assertTrue(DisabledPlacement.isDisabledFor(laggy, null));

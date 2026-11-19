@@ -27,13 +27,23 @@ options:
   # performance. They still work otherwise (crafting, as ingredients), and blocks placed before
   # stay where they are. Block Placers can't place them either.
   # Players with the permission slimefun.place.bypass (nobody by default) can still place them.
-  # Find an item's ID in /sf search or in Items.yml. Example:
-  # disabled-block-placement:
-  # - CARGO_NODE_INPUT
-  # - CARGO_NODE_OUTPUT
-  # - CARGO_NODE_OUTPUT_ADVANCED
-  # - ORE_WASHER
-  disabled-block-placement: []
+  # Find an item's ID in Items.yml.
+  #
+  # By default the cargo network is disabled, because the Networks addon does the same job:
+  #   CARGO_MANAGER              -> Network Controller
+  #   CARGO_NODE                 -> Network Bridge
+  #   CARGO_NODE_INPUT           -> Network Grabber / Vanilla Grabber / Network Importer
+  #   CARGO_NODE_OUTPUT          -> Network Pusher / Vanilla Pusher / Network Exporter
+  #   CARGO_NODE_OUTPUT_ADVANCED -> Network Pusher (9 filter slots)
+  # Keep REACTOR_ACCESS_PORT placeable: reactors only take items through it, also from Networks.
+  # The cargo items can still be crafted, because Networks uses them in its recipes.
+  # Use [] to allow placing everything.
+  disabled-block-placement:
+  - CARGO_MANAGER
+  - CARGO_NODE
+  - CARGO_NODE_INPUT
+  - CARGO_NODE_OUTPUT
+  - CARGO_NODE_OUTPUT_ADVANCED
 
 guide:
   show-vanilla-recipes: true
